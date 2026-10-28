@@ -369,3 +369,37 @@ class TestFootnotesConversion:
 
             assert result.exists()
             assert result.stat().st_size > 1000
+
+
+class TestWideTables:
+    """Tests for tables wider than the e-reader page."""
+
+    def test_wide_table_fits_page(self) -> None:
+        """Test that the last column of a wide table is not clipped."""
+        from pypdf import PdfReader
+
+        header = "".join(f"<th>Column{i}</th>" for i in range(7))
+        row = "".join(f"<td>Longword{i}value</td>" for i in range(7))
+        paper = Paper(
+            id="test.00001",
+            title="Paper with Wide Table",
+            authors=["Author"],
+            abstract="Abstract",
+            sections=[
+                Section(
+                    id="S1",
+                    title="Content",
+                    level=1,
+                    content=f"<table><tr>{header}</tr><tr>{row}</tr></table>",
+                )
+            ],
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "wide_table.pdf"
+            result = convert_to_pdf(
+                paper, output_path, screen_preset="kobo-clara", download_images=False
+            )
+
+            text = "".join(page.extract_text() for page in PdfReader(result).pages)
+            assert "Longword6value" in text

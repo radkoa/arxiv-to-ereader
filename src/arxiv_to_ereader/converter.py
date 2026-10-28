@@ -28,6 +28,34 @@ def _download_image(url: str, timeout: float = 30.0) -> tuple[bytes, str] | None
         return None
 
 
+# Page margins (shared by layout measurement and PDF generation)
+PAGE_MARGIN_X_MM = 6
+
+# Don't shrink tables below this factor - smaller text is unreadable on e-ink
+MIN_TABLE_SCALE = 0.5
+
+# Shrink outermost tables that are wider than the text column so they fit the page.
+# CSS zoom (unlike transform) also shrinks the layout box, so nothing gets clipped.
+_FIT_TABLES_JS = """
+(minScale) => {
+    const body = document.body;
+    const style = getComputedStyle(body);
+    const available = body.clientWidth
+        - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    let scaled = 0;
+    for (const el of document.querySelectorAll("table, .ltx_tabular")) {
+        if (el.parentElement && el.parentElement.closest("table, .ltx_tabular")) continue;
+        const width = Math.max(el.scrollWidth, el.getBoundingClientRect().width);
+        if (width > available + 1) {
+            el.style.zoom = Math.max(available / width, minScale);
+            scaled++;
+        }
+    }
+    return scaled;
+}
+"""
+
+
 def _build_html_document(
     paper: Paper,
     image_map: dict[str, str],
@@ -202,13 +230,18 @@ def convert_to_pdf(
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch()
-            page = browser.new_page()
+            # Lay out the page at the printed text width so overflow can be measured
+            content_width_px = (preset.width_mm - 2 * PAGE_MARGIN_X_MM) / 25.4 * 96
+            page = browser.new_page(viewport={"width": int(content_width_px), "height": 1000})
+            page.emulate_media(media="print")
 
             # Load the HTML file
             page.goto(f"file://{temp_html_path}")
 
             # Wait for any async content to load
             page.wait_for_load_state("networkidle")
+
+            page.evaluate(_FIT_TABLES_JS, MIN_TABLE_SCALE)
 
             # Generate PDF with custom page size and document outline for navigation
             page.pdf(
@@ -218,8 +251,8 @@ def convert_to_pdf(
                 margin={
                     "top": "8mm",
                     "bottom": "10mm",
-                    "left": "6mm",
-                    "right": "6mm",
+                    "left": f"{PAGE_MARGIN_X_MM}mm",
+                    "right": f"{PAGE_MARGIN_X_MM}mm",
                 },
                 print_background=True,
                 tagged=True,  # Generate tagged/accessible PDF
