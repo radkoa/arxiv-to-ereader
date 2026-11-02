@@ -403,3 +403,36 @@ class TestWideTables:
 
             text = "".join(page.extract_text() for page in PdfReader(result).pages)
             assert "Longword6value" in text
+
+
+class TestLatexmlLayout:
+    """Tests for rendering LaTeXML-specific markup with the PDF stylesheet."""
+
+    def test_list_marker_on_same_line_as_text(self) -> None:
+        """Test that the bullet is not on its own line before the item text."""
+        from playwright.sync_api import sync_playwright
+
+        from arxiv_to_ereader.screen_presets import get_preset
+        from arxiv_to_ereader.styles import get_pdf_stylesheet
+
+        css = get_pdf_stylesheet(get_preset("kobo-clara"))
+        html = f"""<style>{css}</style>
+<ul class="ltx_itemize"><li class="ltx_item"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para"><p class="ltx_p"><span class="ltx_text ltx_font_bold">Bold.</span>
+Item text.</p></div></li></ul>"""
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            page.set_content(html)
+            tag_box = page.locator(".ltx_tag").bounding_box()
+            text_box = page.locator(".ltx_p").bounding_box()
+            weight = page.locator(".ltx_font_bold").evaluate(
+                "el => getComputedStyle(el).fontWeight"
+            )
+            browser.close()
+
+        assert tag_box is not None and text_box is not None
+        assert abs(tag_box["y"] - text_box["y"]) < 2
+        assert tag_box["x"] < text_box["x"]
+        assert int(weight) >= 700

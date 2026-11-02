@@ -299,7 +299,24 @@ table.ltx_eqn_table td {{
 
 .ltx_item {{
     margin-bottom: 4pt;
+    position: relative;
+    list-style: none;
 }}
+
+/* LaTeXML puts the bullet/number in a span followed by a block .ltx_para,
+   so hang it in the left margin to keep it on the same line as the text */
+.ltx_item > .ltx_tag {{
+    position: absolute;
+    right: 100%;
+    padding-right: 0.4em;
+    white-space: nowrap;
+}}
+
+/* LaTeXML font classes (\\textbf, \\emph, \\texttt, ...) */
+.ltx_font_bold {{ font-weight: bold; }}
+.ltx_font_italic {{ font-style: italic; }}
+.ltx_font_typewriter {{ font-family: "Courier New", Courier, monospace; }}
+.ltx_font_smallcaps {{ font-variant: small-caps; }}
 
 /* Code blocks */
 .code-block, .ltx_listing, .ltx_verbatim {{
