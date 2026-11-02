@@ -20,6 +20,7 @@ class TestScreenPresets:
             "kindle-paperwhite-6",
             "kindle-scribe",
             "kobo-clara",
+            "pocketbook-verse",
             "kobo-libra",
             "remarkable",
             "a5",

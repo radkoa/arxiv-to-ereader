@@ -91,6 +91,7 @@ uv run arxiv-ereader 2402.08954 --use-id
 | `kindle-paperwhite-6` | Kindle Paperwhite 6" (older) | 91x123mm |
 | `kindle-scribe` | Kindle Scribe 10.2" | 158x210mm |
 | `kobo-clara` | Kobo Clara 6" | 91x123mm |
+| `pocketbook-verse` | PocketBook Verse / Verse Pro (Color) 6" | 91x123mm |
 | `kobo-libra` | Kobo Libra 7" | 107x142mm |
 | `remarkable` | reMarkable 2 10.3" | 158x210mm |
 | `a5` | A5 paper size | 148x210mm |

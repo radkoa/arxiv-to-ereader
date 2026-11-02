@@ -13,6 +13,9 @@ class ScreenPreset:
     ppi: int
     base_font_pt: float
     description: str
+    margin_x_mm: float = 6
+    margin_top_mm: float = 8
+    margin_bottom_mm: float = 10
 
 
 SCREEN_PRESETS: dict[str, ScreenPreset] = {
@@ -47,6 +50,17 @@ SCREEN_PRESETS: dict[str, ScreenPreset] = {
         ppi=300,
         base_font_pt=10,
         description="Kobo Clara 6-inch",
+    ),
+    "pocketbook-verse": ScreenPreset(
+        name="PocketBook Verse",
+        width_mm=91,
+        height_mm=123,
+        ppi=300,
+        base_font_pt=8,
+        description="PocketBook Verse / Verse Pro / Verse Pro Color 6-inch",
+        margin_x_mm=3,
+        margin_top_mm=3,
+        margin_bottom_mm=4,
     ),
     "kobo-libra": ScreenPreset(
         name="Kobo Libra",

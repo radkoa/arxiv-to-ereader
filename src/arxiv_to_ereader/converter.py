@@ -28,9 +28,6 @@ def _download_image(url: str, timeout: float = 30.0) -> tuple[bytes, str] | None
         return None
 
 
-# Page margins (shared by layout measurement and PDF generation)
-PAGE_MARGIN_X_MM = 6
-
 # Don't shrink tables below this factor - smaller text is unreadable on e-ink
 MIN_TABLE_SCALE = 0.5
 
@@ -231,7 +228,7 @@ def convert_to_pdf(
         with sync_playwright() as p:
             browser = p.chromium.launch()
             # Lay out the page at the printed text width so overflow can be measured
-            content_width_px = (preset.width_mm - 2 * PAGE_MARGIN_X_MM) / 25.4 * 96
+            content_width_px = (preset.width_mm - 2 * preset.margin_x_mm) / 25.4 * 96
             page = browser.new_page(viewport={"width": int(content_width_px), "height": 1000})
             page.emulate_media(media="print")
 
@@ -249,10 +246,10 @@ def convert_to_pdf(
                 width=f"{width_inches}in",
                 height=f"{height_inches}in",
                 margin={
-                    "top": "8mm",
-                    "bottom": "10mm",
-                    "left": f"{PAGE_MARGIN_X_MM}mm",
-                    "right": f"{PAGE_MARGIN_X_MM}mm",
+                    "top": f"{preset.margin_top_mm}mm",
+                    "bottom": f"{preset.margin_bottom_mm}mm",
+                    "left": f"{preset.margin_x_mm}mm",
+                    "right": f"{preset.margin_x_mm}mm",
                 },
                 print_background=True,
                 tagged=True,  # Generate tagged/accessible PDF
