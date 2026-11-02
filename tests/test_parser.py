@@ -72,7 +72,17 @@ class TestParsePaper:
     def test_base_url_set(self, sample_html: str, sample_paper_id: str) -> None:
         """Test that base URL is set correctly."""
         paper = parse_paper(sample_html, sample_paper_id)
-        assert paper.base_url == f"https://arxiv.org/html/{sample_paper_id}/"
+        assert paper.base_url == f"https://arxiv.org/html/{sample_paper_id}"
+
+    def test_relative_image_url_resolved_like_browser(self) -> None:
+        """Test that arXiv's version-prefixed relative srcs resolve against /html/."""
+        html = '''<html><body><article class="ltx_document">
+        <figure class="ltx_figure"><img src="2402.08954v1/x1.png" class="ltx_graphics"/>
+        <figcaption>Figure 1</figcaption></figure></article></body></html>'''
+        paper = parse_paper(html, "2402.08954")
+        assert paper.all_images["2402.08954v1/x1.png"] == (
+            "https://arxiv.org/html/2402.08954v1/x1.png"
+        )
 
     def test_minimal_html(self, minimal_html: str) -> None:
         """Test parsing minimal HTML without LaTeXML structure."""
