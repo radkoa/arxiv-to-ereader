@@ -436,3 +436,34 @@ Item text.</p></div></li></ul>"""
         assert abs(tag_box["y"] - text_box["y"]) < 2
         assert tag_box["x"] < text_box["x"]
         assert int(weight) >= 700
+
+    def test_code_listing_left_aligned_without_blank_lines(self) -> None:
+        """Test that lstlisting lines are not centered or separated by blank lines."""
+        from playwright.sync_api import sync_playwright
+
+        from arxiv_to_ereader.screen_presets import get_preset
+        from arxiv_to_ereader.styles import get_pdf_stylesheet
+
+        css = get_pdf_stylesheet(get_preset("pocketbook-verse"))
+        lines = "\n".join(
+            f'<div class="ltx_listingline"><span class="ltx_text ltx_font_typewriter" '
+            f'style="font-size:80%;">x = {i}</span>\n</div>'
+            for i in range(10)
+        )
+        html = f"""<style>{css}</style><figure class="ltx_float ltx_lstlisting">
+<div class="ltx_listing code-block">{lines}</div></figure>"""
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            page.set_content(html)
+            first = page.locator(".ltx_listingline").nth(0).bounding_box()
+            second = page.locator(".ltx_listingline").nth(1).bounding_box()
+            text = page.locator(".ltx_listingline .ltx_text").nth(0).bounding_box()
+            listing = page.locator(".ltx_listing").bounding_box()
+            browser.close()
+
+        # Next line starts right below the previous one (no blank line in between)
+        assert second["y"] - (first["y"] + first["height"]) < 1
+        # Text starts at the left edge, not centered
+        assert text["x"] - listing["x"] < 20

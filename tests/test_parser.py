@@ -157,3 +157,41 @@ class TestParserEdgeCases:
         paper = parse_paper(html, "0000.00000")
         # Should either have no sections or a main content section
         assert isinstance(paper.sections, list)
+
+
+class TestInfoBoxes:
+    """Tests for converting LaTeXML tcolorbox SVGs to HTML."""
+
+    BOX_HTML = """<html><body><article class="ltx_document">
+<section class="ltx_section" id="S1"><h2 class="ltx_title">Intro</h2>
+<div class="ltx_para"><span class="ltx_inline-block">
+<svg class="ltx_picture" viewBox="0 0 680 100">
+<g fill="#000000"><g fill="#994D00" fill-opacity="1.0"><path d="M 0 0"></path></g>
+<g fill="#FFF9F2" fill-opacity="1.0"><path d="M 1 1"></path></g>
+<g fill-opacity="1.0"><foreignobject width="575" height="12">
+<span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage" style="width:41em;">
+<span class="ltx_p"><span class="ltx_text ltx_font_bold">Box Title</span></span>
+</span></span></span>
+</foreignobject></g>
+<g fill-opacity="1.0"><foreignobject width="662" height="40">
+<span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage" style="width:47em;">
+<span class="ltx_p">Box body text.</span></span></span></span></foreignobject></g>
+</g></svg></span></div></section></article></body></html>"""
+
+    def test_box_svg_becomes_html(self) -> None:
+        """Test that the SVG box is replaced by a titled HTML block with its colors."""
+        from bs4 import BeautifulSoup
+
+        paper = parse_paper(self.BOX_HTML, "2402.08954")
+        soup = BeautifulSoup(paper.sections[0].content, "lxml")
+
+        assert soup.find("svg") is None
+        box = soup.select_one(".info-box")
+        assert box is not None
+        assert "#FFF9F2" in box["style"]
+        title = box.select_one(".info-box-title")
+        assert title.get_text(strip=True) == "Box Title"
+        assert "#994D00" in title["style"]
+        assert box.select_one(".info-box-body").get_text(strip=True) == "Box body text."

@@ -315,7 +315,10 @@ table.ltx_eqn_table td {{
 /* LaTeXML font classes (\\textbf, \\emph, \\texttt, ...) */
 .ltx_font_bold {{ font-weight: bold; }}
 .ltx_font_italic {{ font-style: italic; }}
-.ltx_font_typewriter {{ font-family: "Courier New", Courier, monospace; }}
+.ltx_font_typewriter {{
+    font-family: "Courier New", Courier, monospace;
+    overflow-wrap: anywhere;
+}}
 .ltx_font_smallcaps {{ font-variant: small-caps; }}
 
 /* Code blocks */
@@ -328,6 +331,88 @@ table.ltx_eqn_table td {{
     white-space: pre-wrap;
     word-wrap: break-word;
     border: 0.5pt solid #ddd;
+    text-align: left;
+    hyphens: none;
+    -webkit-hyphens: none;
+}}
+
+/* lstlisting: one div per line, so the whitespace between them must not render
+   as extra blank lines; long listings may break across pages */
+.ltx_listing {{
+    white-space: normal;
+    line-height: 1.3;
+}}
+
+.ltx_listingline {{
+    white-space: pre-wrap;
+}}
+
+/* Listings already get a smaller font above; ignore LaTeX's extra \\footnotesize (80%) */
+.ltx_listingline .ltx_text {{
+    font-size: inherit !important;
+}}
+
+.ltx_listing_data {{
+    display: none;
+}}
+
+figure.ltx_lstlisting {{
+    page-break-inside: auto;
+}}
+
+/* LaTeXML colors set via custom properties (normally applied by arXiv's CSS) */
+[style*="--ltx-fg-color"] {{ color: var(--ltx-fg-color); }}
+[style*="--ltx-bg-color"] {{ background-color: var(--ltx-bg-color); }}
+
+/* Colored info boxes (tcolorbox), converted from SVG by the parser */
+.info-box {{
+    margin: 12pt 0;
+    border: 1pt solid;
+    border-radius: 3pt;
+    overflow: hidden;
+    text-align: left;
+}}
+
+.info-box-title {{
+    padding: 3pt 6pt;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: bold;
+    color: #fff;
+    page-break-after: avoid;
+}}
+
+.info-box-body {{
+    padding: 5pt 6pt;
+}}
+
+.info-box .ltx_minipage {{
+    display: block;
+    width: auto !important;
+}}
+
+.info-box .ltx_p {{
+    display: block;
+    margin: 0 0 4pt 0;
+}}
+
+.info-box .code-block {{
+    margin: 2pt 0 6pt 0;
+}}
+
+/* Inline code: monospace looks larger than the serif body at the same size */
+.ltx_p .ltx_font_typewriter {{
+    font-size: 0.9em;
+}}
+
+/* Inside SVG foreignobjects LaTeXML writes lists as spans instead of ul/li */
+span.ltx_itemize, span.ltx_enumerate {{
+    display: block;
+    margin: 4pt 0;
+    padding-left: 1.5em;
+}}
+
+span.ltx_item, span.ltx_para {{
+    display: block;
 }}
 
 /* Blockquotes */

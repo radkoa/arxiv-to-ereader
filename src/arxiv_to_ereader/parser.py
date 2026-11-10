@@ -133,6 +133,45 @@ def _process_content(soup_fragment: Tag, footnote_counter: list[int]) -> tuple[s
         else:
             svg.replace_with(algo_div)
 
+    # 0a. Convert tcolorbox-style SVGs (colored info boxes) to HTML blocks
+    # LaTeXML draws them as a fixed-size SVG (frame + background paths) with the text in
+    # 1-2 foreignobjects (optional title, then body). Scaled to the page width the text
+    # becomes tiny and overflows the precomputed frame, so rebuild them as plain HTML.
+    for svg in soup_fragment.select("svg.ltx_picture"):
+        foreignobjects = svg.find_all("foreignobject")
+        if not 1 <= len(foreignobjects) <= 2 or len(svg.find_all("path")) > 2:
+            continue
+        contents = [fo.find(class_="ltx_foreignobject_content") for fo in foreignobjects]
+        if not all(contents) or not contents[-1].select_one(".ltx_minipage"):
+            continue
+
+        colored_groups = svg.find_all("g", attrs={"fill-opacity": True})
+        fills = [g["fill"] for g in colored_groups if g.get("fill")]
+        frame_color = fills[0] if fills else "#666666"
+        body_color = fills[1] if len(fills) > 1 else "#FFFFFF"
+
+        box_style = f"border-color:{frame_color};background:{body_color};"
+        box_div = new_tag("div", {"class": "info-box", "style": box_style})
+        if len(contents) == 2:
+            title_style = f"background:{frame_color};"
+            title_div = new_tag("div", {"class": "info-box-title", "style": title_style})
+            title_div.extend(list(contents[0].children))
+            box_div.append(title_div)
+        body_div = new_tag("div", {"class": "info-box-body"})
+        body_div.extend(list(contents[-1].children))
+        box_div.append(body_div)
+
+        # The SVG sits in an inline-block span; replace that wrapper too
+        wrapper = svg.parent
+        if (
+            wrapper
+            and "ltx_inline-block" in wrapper.get("class", [])
+            and len(wrapper.find_all(recursive=False)) == 1
+        ):
+            wrapper.replace_with(box_div)
+        else:
+            svg.replace_with(box_div)
+
     # 0b. Clean up image alt text - remove useless "Refer to caption" placeholder
     for img in soup_fragment.find_all("img"):
         alt = img.get("alt", "")
