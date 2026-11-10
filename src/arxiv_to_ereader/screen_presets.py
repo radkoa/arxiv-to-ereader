@@ -16,6 +16,7 @@ class ScreenPreset:
     margin_x_mm: float = 6
     margin_top_mm: float = 8
     margin_bottom_mm: float = 10
+    line_height: float = 1.5
 
 
 SCREEN_PRESETS: dict[str, ScreenPreset] = {
@@ -60,7 +61,8 @@ SCREEN_PRESETS: dict[str, ScreenPreset] = {
         description="PocketBook Verse / Verse Pro / Verse Pro Color 6-inch",
         margin_x_mm=3,
         margin_top_mm=3,
-        margin_bottom_mm=4,
+        margin_bottom_mm=2,
+        line_height=1.4,
     ),
     "kobo-libra": ScreenPreset(
         name="Kobo Libra",

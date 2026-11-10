@@ -26,7 +26,7 @@ def get_pdf_stylesheet(preset: ScreenPreset) -> str:
 body {{
     font-family: Georgia, "Times New Roman", serif;
     font-size: {preset.base_font_pt}pt;
-    line-height: 1.5;
+    line-height: {preset.line_height};
     color: #000;
     background: #fff;
     text-align: justify;
