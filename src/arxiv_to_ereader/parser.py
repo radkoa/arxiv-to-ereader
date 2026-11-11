@@ -142,7 +142,11 @@ def _process_content(soup_fragment: Tag, footnote_counter: list[int]) -> tuple[s
         if not 1 <= len(foreignobjects) <= 2 or len(svg.find_all("path")) > 2:
             continue
         contents = [fo.find(class_="ltx_foreignobject_content") for fo in foreignobjects]
-        if not all(contents) or not contents[-1].select_one(".ltx_minipage"):
+        if not all(contents):
+            continue
+        # Box bodies are minipages: either a span inside the content or the foreignobject itself
+        body_fo_is_minipage = "ltx_minipage" in foreignobjects[-1].get("class", [])
+        if not body_fo_is_minipage and not contents[-1].select_one(".ltx_minipage"):
             continue
 
         colored_groups = svg.find_all("g", attrs={"fill-opacity": True})

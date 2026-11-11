@@ -344,7 +344,13 @@ table.ltx_eqn_table td {{
 }}
 
 .ltx_listingline {{
+    display: block;
     white-space: pre-wrap;
+}}
+
+/* Inside SVG foreignobjects (info boxes) listings are written as spans */
+span.ltx_listing {{
+    display: block;
 }}
 
 /* Listings already get a smaller font above; ignore LaTeX's extra \\footnotesize (80%) */

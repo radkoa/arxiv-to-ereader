@@ -437,8 +437,12 @@ Item text.</p></div></li></ul>"""
         assert tag_box["x"] < text_box["x"]
         assert int(weight) >= 700
 
-    def test_code_listing_left_aligned_without_blank_lines(self) -> None:
-        """Test that lstlisting lines are not centered or separated by blank lines."""
+    @pytest.mark.parametrize("tag", ["div", "span"])
+    def test_code_listing_left_aligned_without_blank_lines(self, tag: str) -> None:
+        """Test that lstlisting lines are not centered or separated by blank lines.
+
+        Inside info boxes LaTeXML writes the listing and its lines as spans.
+        """
         from playwright.sync_api import sync_playwright
 
         from arxiv_to_ereader.screen_presets import get_preset
@@ -446,12 +450,12 @@ Item text.</p></div></li></ul>"""
 
         css = get_pdf_stylesheet(get_preset("pocketbook-verse"))
         lines = "\n".join(
-            f'<div class="ltx_listingline"><span class="ltx_text ltx_font_typewriter" '
-            f'style="font-size:80%;">x = {i}</span>\n</div>'
+            f'<{tag} class="ltx_listingline"><span class="ltx_text ltx_font_typewriter" '
+            f'style="font-size:80%;">x = {i}</span>\n</{tag}>'
             for i in range(10)
         )
         html = f"""<style>{css}</style><figure class="ltx_float ltx_lstlisting">
-<div class="ltx_listing code-block">{lines}</div></figure>"""
+<{tag} class="ltx_listing code-block">{lines}</{tag}></figure>"""
 
         with sync_playwright() as p:
             browser = p.chromium.launch()
@@ -461,9 +465,12 @@ Item text.</p></div></li></ul>"""
             second = page.locator(".ltx_listingline").nth(1).bounding_box()
             text = page.locator(".ltx_listingline .ltx_text").nth(0).bounding_box()
             listing = page.locator(".ltx_listing").bounding_box()
+            display = page.locator(".ltx_listing").evaluate("el => getComputedStyle(el).display")
             browser.close()
 
         # Next line starts right below the previous one (no blank line in between)
         assert second["y"] - (first["y"] + first["height"]) < 1
         # Text starts at the left edge, not centered
         assert text["x"] - listing["x"] < 20
+        # Inline listings draw their frame around each line fragment, overlapping lines
+        assert display == "block"

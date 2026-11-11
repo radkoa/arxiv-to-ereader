@@ -195,3 +195,23 @@ class TestInfoBoxes:
         assert title.get_text(strip=True) == "Box Title"
         assert "#994D00" in title["style"]
         assert box.select_one(".info-box-body").get_text(strip=True) == "Box body text."
+
+    def test_box_with_minipage_foreignobject(self) -> None:
+        """Test a box whose body foreignobject is itself the minipage (e.g. holding a table)."""
+        from bs4 import BeautifulSoup
+
+        html = self.BOX_HTML.replace(
+            '<foreignobject width="662" height="40">',
+            '<foreignobject class="ltx_minipage" width="662" height="40">',
+        ).replace(
+            '<span class="ltx_inline-block ltx_minipage" style="width:47em;">\n'
+            '<span class="ltx_p">Box body text.</span></span>',
+            '<table class="ltx_tabular"><tr><td>Box body text.</td></tr></table>',
+        )
+        assert "ltx_tabular" in html
+
+        paper = parse_paper(html, "2402.08954")
+        soup = BeautifulSoup(paper.sections[0].content, "lxml")
+
+        assert soup.find("svg") is None
+        assert soup.select_one(".info-box-body table") is not None
